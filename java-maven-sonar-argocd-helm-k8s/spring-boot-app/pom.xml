@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.abhishek</groupId>
+    <groupId>com.ajay</groupId>
     <artifactId>spring-boot-demo</artifactId>
     <version>1.0</version>
 
@@ -53,7 +53,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.abhishek.SpringBootDemoApplication</mainClass> <!-- Adjust as needed -->
+                    <mainClass>com.ajay.SpringBootDemoApplication</mainClass> <!-- Adjust as needed -->
                 </configuration>
             </plugin>
             <plugin>
