@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the repository
-                git 'https://github.com/ajaytalloju/Jenkins.git'
+                git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
             }
         }
         stage('Build Custom Docker Image') {
@@ -35,6 +35,5 @@ pipeline {
                 }
             }
         }
-        // You can add more stages here, such as tests or deployment
     }
 }
