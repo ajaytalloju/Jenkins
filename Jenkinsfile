@@ -9,14 +9,13 @@ pipeline {
         stage('Build Custom Docker Image') {
             steps {
                 script {
-                    // Build the custom Docker image with Docker CLI
-                    sh '''
-                    cat <<EOF > Dockerfile
+                    // Create the Dockerfile and build the image
+                    writeFile file: 'Dockerfile', text: '''
                     FROM node:16-alpine
                     RUN apk update && apk add --no-cache docker-cli
-                    EOF
-                    docker build -t ${CUSTOM_IMAGE_NAME} .
                     '''
+                    // Build the Docker image
+                    sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
                 }
             }
         }
