@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
+        CUSTOM_IMAGE_NAME = 'ajaytalloju/myrepo:spring-boot-web'
+        FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:spring-boot-web-final'
+    }
+    stages {
+        stage('Build Custom Docker Image') {
+            steps {
+                script {
+                    // Create the Dockerfile and build the image
+                    writeFile file: 'Dockerfile', text: '''
+                    FROM adoptopenjdk/openjdk11:alpine-jre
+
+                    # Specify the artifact path
+                    ARG artifact=target/spring-boot-web.jar
+
+                    WORKDIR /opt/app
+
+                    COPY ${artifact} app.jar
+
+                    ENTRYPOINT ["java","-jar","app.jar"]
+                    '''
+                    // Build the Docker image for ARM64 architecture
+                    sh "docker build --platform linux/arm64 -t ${CUSTOM_IMAGE_NAME} ."
+                }
+            }
+        }
+        stage('Push Custom Docker Image to Docker Hub') {
+            steps {
+                script {
+                    // Log in and push the custom Docker image
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "docker push ${CUSTOM_IMAGE_NAME}"
+                }
+            }
+        }
+        stage('Test with Custom Image') {
+            agent {
+                docker { image "${CUSTOM_IMAGE_NAME}" }
+            }
+            steps {
+                // Run tests within the custom Docker image
+                sh 'java -version' // Assuming you're testing with Java; adjust if necessary
+            }
+        }
+        stage('Tag Final Image') {
+            steps {
+                script {
+                    // Tag the Docker image
+                    sh "docker tag ${CUSTOM_IMAGE_NAME} ${FINAL_IMAGE_NAME}"
+                }
+            }
+        }
+        stage('Push Final Image to Docker Hub') {
+            steps {
+                script {
+                    // Push the tagged image to Docker Hub
+                    sh "docker push ${FINAL_IMAGE_NAME}"
+                }
+            }
+        }
+    }
+}
