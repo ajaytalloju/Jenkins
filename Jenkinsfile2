@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker { image 'node:16-alpine' } // Use the Node.js image
+        docker { image 'node:16-alpine' }
     }
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred') // Jenkins credential ID
@@ -9,29 +9,27 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone the repository
                 git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
+            }
+        }
+        stage('Test Docker Access') {
+            steps {
+                sh 'docker --version' // Test if Docker command works
             }
         }
         stage('Build Custom Docker Image') {
             steps {
-                // List files to ensure Dockerfile is present
-                sh 'ls -l'
-                
-                // Build the Docker image using the Dockerfile
+                sh 'ls -l' // List files to ensure Dockerfile is present
                 script {
-                    sh "docker build -t ${IMAGE_NAME} ." // Ensure the Dockerfile is in the root of the repo
+                    sh "docker build -t ${IMAGE_NAME} ." // Build the Docker image
                 }
             }
         }
         stage('Push Custom Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Login to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    
-                    // Push the image to Docker Hub
-                    sh "docker push ${IMAGE_NAME}"
+                    sh "docker push ${IMAGE_NAME}" // Push the image to Docker Hub
                 }
             }
         }
