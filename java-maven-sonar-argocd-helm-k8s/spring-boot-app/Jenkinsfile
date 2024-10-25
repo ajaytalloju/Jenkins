@@ -33,7 +33,7 @@ pipeline {
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "ajaytalloju/maven:3.8.6-jdk-11-slim:${BUILD_NUMBER}"
-        REGISTRY_CREDENTIALS = credentials('docker-cred')
+        REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
       }
       steps {
         script {
@@ -52,7 +52,7 @@ pipeline {
         GIT_USER_NAME = "ajaytalloju"
       }
       steps {
-        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+        withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
           sh '''
             git config user.email "ajay.talloju@gmail.com"
             git config user.name "Ajay Talloju"
