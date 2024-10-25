@@ -10,7 +10,7 @@ pipeline {
       steps {
         sh 'echo passed'
         // Uncomment the following line to check out the repository
-        // git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
+        git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
       }
     }
     stage('Build and Test') {
