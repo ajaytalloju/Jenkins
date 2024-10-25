@@ -3,7 +3,7 @@ pipeline {
         docker { image 'node:16-alpine' }
     }
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Make sure this is your credentials ID in Jenkins
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred') // Make sure this is your credentials ID in Jenkins
         IMAGE_NAME = 'ajaytalloju/myrepo:node-16-alpine'
     }
     stages {
