@@ -6,6 +6,22 @@ pipeline {
         FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:spring-boot-web-final'
     }
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm // Ensure you're checking out the latest code
+            }
+        }
+        stage('Build Spring Boot Application') {
+            steps {
+                script {
+                    // Use Maven or Gradle to build the application
+                    // If you're using Maven
+                    sh 'mvn clean package'
+                    // If you're using Gradle
+                    // sh './gradlew build'
+                }
+            }
+        }
         stage('Build Custom Docker Image') {
             steps {
                 script {
@@ -42,7 +58,7 @@ pipeline {
             }
             steps {
                 // Run tests within the custom Docker image
-                sh 'java -version' // Assuming you're testing with Java; adjust if necessary
+                sh 'java -version' // Adjust if necessary
             }
         }
         stage('Tag Final Image') {
