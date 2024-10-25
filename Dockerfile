@@ -1,12 +1,3 @@
-pipeline {
-  agent {
-    docker { image 'node:16-alpine' }
-  }
-  stages {
-    stage('Test') {
-      steps {
-        sh 'node --version'
-      }
-    }
-  }
-}
+# Dockerfile
+FROM node:16-alpine
+RUN apk update && apk add --no-cache docker-cli
