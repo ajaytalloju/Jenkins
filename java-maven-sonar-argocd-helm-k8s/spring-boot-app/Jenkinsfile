@@ -32,19 +32,26 @@ pipeline {
     }
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "ajaytalloju/maven:3.8.6-jdk-11-slim:${BUILD_NUMBER}"
-        REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
-      }
-      steps {
-        script {
-          // Build the Docker image for ARM64 architecture
-          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build --platform linux/arm64 -t ${DOCKER_IMAGE} .'
-          def dockerImage = docker.image("${DOCKER_IMAGE}")
-          docker.withRegistry('https://index.docker.io/v1/', "dockerhub-cred") {
-            dockerImage.push()
-          }
-        }
-      }
+        DOCKER_IMAGE = "ajaytalloju/3.8.6-jdk-11-slim:${BUILD_NUMBER}"
+     }
+     steps {
+       script {
+      // Print the Docker image name to verify it's correctly formatted
+         sh 'echo "Docker image name: ${DOCKER_IMAGE}"'
+
+      // Attempt to build the Docker image with ARM64 architecture
+         sh '''
+           cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+           docker build --platform linux/arm64 -t ${DOCKER_IMAGE} .
+        '''
+      
+         def dockerImage = docker.image("${DOCKER_IMAGE}")
+      
+         docker.withRegistry('https://index.docker.io/v1/', "dockerhub-cred") {
+           dockerImage.push()
+         }
+       }
+     }
     }
     stage('Update Deployment File') {
       environment {
