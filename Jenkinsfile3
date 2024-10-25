@@ -11,7 +11,7 @@ pipeline {
                 script {
                     // Create the Dockerfile and build the image
                     writeFile file: 'Dockerfile', text: '''
-                    FROM adoptopenjdk/openjdk11:alpine-jre
+                    FROM openjdk:11-jdk-slim
 
                     # Specify the artifact path
                     ARG artifact=target/spring-boot-web.jar
@@ -22,8 +22,8 @@ pipeline {
 
                     ENTRYPOINT ["java","-jar","app.jar"]
                     '''
-                    // Build the Docker image for ARM64 architecture
-                    sh "docker build --platform linux/arm64 -t ${CUSTOM_IMAGE_NAME} ."
+                    // Build the Docker image
+                    sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
                 }
             }
         }
