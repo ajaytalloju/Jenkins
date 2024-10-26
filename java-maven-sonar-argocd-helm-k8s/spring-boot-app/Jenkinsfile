@@ -1,68 +1,92 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'ajaytalloju/maven-docker-agent' // Your custom image
+            args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        IMAGE_NAME = 'ajaytalloju/myrepo:your-image-name' // Update this if necessary
+        SONAR_URL = "http://68.233.116.7:9000"
+        IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
+        DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
+        REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
     }
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                // Ensure you are checking out your source code
-                checkout scm
+                sh 'echo passed'
+                // git branch: 'main', url: 'https://github.com/iam-veeramalla/Jenkins-Zero-To-Hero.git'
             }
         }
-        stage('List Workspace Files') {
+        stage('Build and Test') {
             steps {
-                // List files to verify pom.xml is present
-                sh 'ls -R'
+                sh 'ls -ltr'
+                // Build the project and create a JAR file
+                sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
             }
         }
-        stage('Build Spring Boot Application') {
+        stage('Static Code Analysis') {
             steps {
-                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') { // Update this to the correct path
-                    sh 'mvn clean package' // Ensure the pom.xml is present in this directory
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
                 }
             }
         }
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Change to the directory containing the pom.xml if necessary
-                    dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
-                        // Define Dockerfile content and build Docker image
-                        writeFile file: 'Dockerfile', text: '''
-                        # Use OpenJDK 11 JRE on a slim Debian-based image as the base image
-                        FROM openjdk:11-jre-slim
+                    // Define Dockerfile content and build Docker image
+                    writeFile file: 'Dockerfile', text: '''
+                    # Use OpenJDK 11 JRE on a slim Debian-based image as the base image
+                    FROM openjdk:11-jre-slim
 
-                        # Define the artifact path as a build argument
-                        ARG artifact=target/spring-boot-web.jar
+                    # Define the artifact path as a build argument
+                    ARG artifact=target/spring-boot-web.jar
 
-                        # Set the working directory inside the container
-                        WORKDIR /opt/app
+                    # Set the working directory inside the container
+                    WORKDIR /opt/app
 
-                        # Copy the artifact into the container
-                        COPY ${artifact} app.jar
+                    # Copy the artifact into the container
+                    COPY ${artifact} app.jar
 
-                        # Set the entry point for the container to run the Spring Boot application
-                        ENTRYPOINT ["java", "-jar", "app.jar"]
-                        '''
-                        // Build the Docker image from the current directory (which has the Dockerfile)
-                        sh "docker build -t ${IMAGE_NAME} ."
-                        
-                        // Login and push the Docker image to Docker Hub
-                        sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                        sh "docker push ${IMAGE_NAME}"
-                    }
+                    # Set the entry point for the container to run the Spring Boot application
+                    ENTRYPOINT ["java", "-jar", "app.jar"]
+                    '''
+                    sh "docker build -t ${IMAGE_NAME} ."
+                    
+                    // Login and push the Docker image to Docker Hub
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "docker push ${IMAGE_NAME}"
                 }
             }
         }
-        stage('Test with Docker Image') {
+        stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "Jenkins"
+                GIT_USER_NAME = "ajaytalloju"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        git config user.email "ajay.tallojugmail.com"
+                        git config user.name "Ajay Talloju"
+                        BUILD_NUMBER=${BUILD_NUMBER}
+                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                        git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
+                }
+            }
+        }
+        stage('Test with Maven Docker Image') {
             agent {
                 docker { image "${IMAGE_NAME}" }
             }
             steps {
-                // Run tests within the Docker image
-                sh 'java -version' // Testing the Java version instead
+                // Run tests within the Maven Docker image
+                sh 'mvn -version'
             }
         }
     }
