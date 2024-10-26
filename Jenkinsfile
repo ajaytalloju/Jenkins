@@ -2,55 +2,32 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        CUSTOM_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
-        FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-alpine'
+        IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
     }
     stages {
-        stage('Build Custom Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Create the Dockerfile and build the image
+                    // Define Dockerfile content and build Docker image
                     writeFile file: 'Dockerfile', text: '''
                     FROM node:16-alpine
                     RUN apk update && apk add --no-cache docker-cli
                     '''
-                    // Build the Docker image
-                    sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
-                }
-            }
-        }
-        stage('Push Custom Docker Image to Docker Hub') {
-            steps {
-                script {
-                    // Log in and push the custom Docker image
+                    sh "docker build -t ${IMAGE_NAME} ."
+                    
+                    // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    sh "docker push ${CUSTOM_IMAGE_NAME}"
+                    sh "docker push ${IMAGE_NAME}"
                 }
             }
         }
-        stage('Test with Custom Image') {
+        stage('Test with Docker Image') {
             agent {
-                docker { image "${CUSTOM_IMAGE_NAME}" }
+                docker { image "${IMAGE_NAME}" }
             }
             steps {
-                // Run tests within the custom Docker image
+                // Run tests within the Docker image
                 sh 'node --version'
-            }
-        }
-        stage('Tag Final Image') {
-            steps {
-                script {
-                    // Tag the Docker image
-                    sh "docker tag ${CUSTOM_IMAGE_NAME} ${FINAL_IMAGE_NAME}"
-                }
-            }
-        }
-        stage('Push Final Image to Docker Hub') {
-            steps {
-                script {
-                    // Push the tagged image to Docker Hub
-                    sh "docker push ${FINAL_IMAGE_NAME}"
-                }
             }
         }
     }
