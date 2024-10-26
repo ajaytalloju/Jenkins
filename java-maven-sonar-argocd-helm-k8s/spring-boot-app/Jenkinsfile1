@@ -58,7 +58,7 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             # Mark the Jenkins workspace as a safe directory
                             git config --global --add safe.directory /var/lib/jenkins/workspace/app1jf1
