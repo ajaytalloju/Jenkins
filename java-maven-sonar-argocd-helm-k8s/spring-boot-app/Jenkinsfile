@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'maven:3.8.6-openjdk-11-slim' // Your custom image
+            image 'ajaytalloju/maven-docker-agent'
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
@@ -22,7 +22,6 @@ pipeline {
         stage('Build and Test') {
             steps {
                 sh 'ls -ltr'
-                // Build the project and create a JAR file
                 sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
             }
         }
@@ -34,7 +33,6 @@ pipeline {
             }
         }
         stage('Build and Push Docker Image') {
-            agent none // Use the Jenkins host agent
             steps {
                 script {
                     writeFile file: 'Dockerfile', text: '''
@@ -46,7 +44,7 @@ pipeline {
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
 
-                    // Login and push to Docker Hub
+                    // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
                 }
@@ -70,15 +68,6 @@ pipeline {
                     '''
                 }
             }
-        }
-        stage('Test with Maven Docker Image') {
-            agent {
-                docker { image "${IMAGE_NAME}" }
-            }
-            steps {
-                // Run tests within the Maven Docker image
-                sh 'mvn -version'
-            }
-        }
+        }    
     }
 }
