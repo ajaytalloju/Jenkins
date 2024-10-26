@@ -58,11 +58,11 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
-                            git config --global user.name "Ajay Talloju"
+                            git config --global user.name "ajaytalloju"
 
                             # Replace placeholder with the build number in the deployment file
                             BUILD_NUMBER=${BUILD_NUMBER}
