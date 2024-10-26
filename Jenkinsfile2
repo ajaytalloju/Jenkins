@@ -1,36 +1,41 @@
 pipeline {
-    agent {
-        docker { image 'node:16-alpine' }
-    }
+    agent any
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred') // Jenkins credential ID
-        IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker' // Specify your image name
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
+        IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
     }
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
-            }
-        }
-        stage('Test Docker Access') {
-            steps {
-                sh 'docker --version' // Test if Docker command works
-            }
-        }
-        stage('Build Custom Docker Image') {
-            steps {
-                sh 'ls -l' // List files to ensure Dockerfile is present
-                script {
-                    sh "docker build -t ${IMAGE_NAME} ." // Build the Docker image
-                }
-            }
-        }
-        stage('Push Custom Docker Image to Docker Hub') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
+                    // Define Dockerfile content and build Docker image
+                    writeFile file: 'Dockerfile', text: '''
+                    # Start from a Maven image with OpenJDK 11
+                    FROM maven:3.8.6-openjdk-11-slim
+
+                    # Install Docker inside the image
+                    RUN apt-get update && \
+                    apt-get install -y docker.io && \
+                    rm -rf /var/lib/apt/lists/*
+
+                    # Verify installations (optional but useful for debugging)
+                    RUN mvn -version && docker --version
+
+                    sh "docker build -t ${IMAGE_NAME} ."
+                    
+                    // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    sh "docker push ${IMAGE_NAME}" // Push the image to Docker Hub
+                    sh "docker push ${IMAGE_NAME}"
                 }
+            }
+        }
+        stage('Test with Docker Image') {
+            agent {
+                docker { image "${IMAGE_NAME}" }
+            }
+            steps {
+                // Run tests within the Docker image
+                sh 'docker --version'
             }
         }
     }
