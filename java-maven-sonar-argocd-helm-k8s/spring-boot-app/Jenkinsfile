@@ -2,15 +2,27 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
+        IMAGE_NAME = 'ajaytalloju/myrepo:your-image-name' // Update this if necessary
     }
     stages {
+        stage('Build Spring Boot Application') {
+            steps {
+                // Build the Spring Boot application
+                sh 'mvn clean package'
+            }
+        }
+        stage('List Files') {
+            steps {
+                // List files in the target directory to ensure the JAR is created
+                sh 'ls -R target'
+            }
+        }
         stage('Build and Push Docker Image') {
             steps {
                 script {
                     // Define Dockerfile content and build Docker image
                     writeFile file: 'Dockerfile', text: '''
-                    # Use AdoptOpenJDK 11 JRE on Alpine as the base image
+                    # Use OpenJDK 11 JRE on a slim Debian-based image as the base image
                     FROM openjdk:11-jre-slim
 
                     # Define the artifact path as a build argument
@@ -24,7 +36,6 @@ pipeline {
 
                     # Set the entry point for the container to run the Spring Boot application
                     ENTRYPOINT ["java", "-jar", "app.jar"]
-
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
                     
@@ -40,7 +51,7 @@ pipeline {
             }
             steps {
                 // Run tests within the Docker image
-                sh 'node --version'
+                sh 'java -version' // Testing the Java version instead
             }
         }
     }
