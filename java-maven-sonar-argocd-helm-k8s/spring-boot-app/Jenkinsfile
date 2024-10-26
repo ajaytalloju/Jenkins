@@ -57,7 +57,7 @@ pipeline {
                 GIT_USER_NAME = "ajaytalloju"
             }
             steps {
-                dir('.') {  // Navigate to the repo directory
+                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {  // Navigate to the repo directory
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                         git config user.email "ajay.talloju@gmail.com"
