@@ -37,7 +37,7 @@ pipeline {
                 script {
                     writeFile file: 'Dockerfile', text: '''
                     FROM openjdk:11-jre-slim
-                    ARG artifact=target/spring-boot-web.jar
+                    ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
                     WORKDIR /opt/app
                     COPY ${artifact} app.jar
                     ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -56,7 +56,7 @@ pipeline {
                 GIT_USER_NAME = "ajaytalloju"
             }
             steps {
-                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app')  // Navigate to the repo directory
+                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {  // Navigate to the repo directory
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                         git config user.email "ajay.talloju@gmail.com"
