@@ -59,25 +59,23 @@ pipeline {
             steps {
                 script {
                     dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
-                        // Add the repository as a safe directory
-                        sh "git config --global --add safe.directory ${GIT_REPO_PATH}"
-
-                        // Check if the directory is a git repository
+                        // Check if the directory is a Git repository
                         def isGitRepo = sh(script: 'git rev-parse --is-inside-work-tree', returnStatus: true) == 0
                         if (!isGitRepo) {
                             // Initialize a new Git repository if not already a git repo
                             sh 'git init'
+                            sh 'git remote add origin https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git'
                             sh 'git branch -m main'  // Set default branch name to 'main'
                             sh 'git config user.email "ajay.talloju@gmail.com"'
                             sh 'git config user.name "ajaytalloju"'
                         }
 
-                        // Proceed with updating the deployment file
+                        // Update the deployment file and push changes
                         sh '''
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
                             git add deployment.yml
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                            git push -u origin main
                         '''
                     }
                 }
