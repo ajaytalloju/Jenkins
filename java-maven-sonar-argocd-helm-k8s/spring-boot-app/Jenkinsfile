@@ -22,7 +22,7 @@ pipeline {
         stage('Build and Test') {
             steps {
                 sh 'ls -ltr'
-                sh 'cd Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
+                sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
             }
         }
         stage('Static Code Analysis') {
@@ -58,7 +58,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        cd Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app
+                        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
                         git config user.email "ajay.talloju@gmail.com"
                         git config user.name "ajaytalloju"
                         sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
