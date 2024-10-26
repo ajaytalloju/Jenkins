@@ -8,7 +8,6 @@ pipeline {
   environment {
     DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
     CUSTOM_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
-    FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-alpine'
   }
   stages {
     stage('Checkout') {
@@ -20,21 +19,7 @@ pipeline {
     stage('Build Custom Docker Image') {
       steps {
         script {
-          // Create the Dockerfile and build the image
-          writeFile file: 'Dockerfile', text: '''
-          FROM adoptopenjdk/openjdk11:alpine-jre
-
-          # Simplify the artifact path
-          ARG artifact=target/spring-boot-web.jar
-
-          WORKDIR /opt/app
-
-          COPY ${artifact} app.jar
-
-          # This should not be changed
-          ENTRYPOINT ["java","-jar","app.jar"]
-          '''
-          // Build the custom Docker image
+          // Build the custom Docker image directly
           sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
         }
       }
