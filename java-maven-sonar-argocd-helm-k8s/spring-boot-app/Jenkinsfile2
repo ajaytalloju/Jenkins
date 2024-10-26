@@ -9,13 +9,13 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
         SONAR_URL = "http://68.233.116.7:9000"
         IMAGE_NAME = "ajaytalloju/myrepo:maven-openjdk-${BUILD_NUMBER}"
+        DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
         GIT_REPO_PATH = '/var/lib/jenkins/workspace/fp/java-maven-sonar-argocd-helm-k8s/spring-boot-app'
     }
     stages {
         stage('Checkout') {
             steps {
-                sh 'echo passed'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
             }
         }
@@ -43,7 +43,7 @@ pipeline {
                         ENTRYPOINT ["java", "-jar", "app.jar"]
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
-
+                    
                     // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
@@ -73,9 +73,9 @@ pipeline {
                             BUILD_NUMBER=${BUILD_NUMBER}
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
 
-                            # Stage and commit the updated deployment file
+                            # Stage only the deployment file and commit the changes
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git commit --only java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml -m "Update deployment image to version ${BUILD_NUMBER}"
 
                             # Push the changes to the GitHub repository
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
