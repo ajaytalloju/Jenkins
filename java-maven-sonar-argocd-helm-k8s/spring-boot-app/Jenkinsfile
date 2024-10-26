@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
         SONAR_URL = "http://68.233.116.7:9000"
-        IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
+        IMAGE_NAME = 'maven:3.8.6-openjdk-11-slim'
         DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
     }
@@ -39,7 +39,6 @@ pipeline {
                     // Define Dockerfile content for Maven and OpenJDK support only
                     writeFile file: 'Dockerfile', text: '''
                     FROM openjdk:11-jdk-slim
-                    FROM maven:3.8.6-openjdk-11-slim
                     RUN apt-get update && \
                         apt-get install -y maven docker.io && \
                         rm -rf /var/lib/apt/lists/*
