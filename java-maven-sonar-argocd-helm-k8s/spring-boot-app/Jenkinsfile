@@ -1,64 +1,72 @@
 pipeline {
-    agent any
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        CUSTOM_IMAGE_NAME = 'ajaytalloju/maven-abhishek-docker-agent'
-        FINAL_IMAGE_NAME = 'ajaytalloju/maven-abhishek-docker-agent'
+  agent {
+    docker {
+      image 'maven:3.8.6-jdk-11-slim'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
     }
-    stages {
-        stage('Build Custom Docker Image') {
-            steps {
-                script {
-                    // Create the Dockerfile and build the image
-                    writeFile file: 'Dockerfile', text: '''
-                    FROM adoptopenjdk/openjdk11:alpine-jre
-
-                    # Simplify the artifact path
-                    ARG artifact=target/spring-boot-web.jar
-
-                    WORKDIR /opt/app
-                    COPY ${artifact} app.jar
-
-                    # This should not be changed
-                    ENTRYPOINT ["java","-jar","app.jar"]
-                    '''
-                    // Build the custom Docker image
-                    sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
-                }
-            }
-        }
-        stage('Push Custom Docker Image to Docker Hub') {
-            steps {
-                script {
-                    // Log in and push the custom Docker image
-                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                    sh "docker push ${CUSTOM_IMAGE_NAME}"
-                }
-            }
-        }
-        stage('Test with Custom Image') {
-            agent {
-                docker { image "${CUSTOM_IMAGE_NAME}" }
-            }
-            steps {
-                sh 'echo "Testing with custom Docker image..."'
-            }
-        }
-        stage('Tag Final Image') {
-            steps {
-                script {
-                    // Tag the Docker image
-                    sh "docker tag ${CUSTOM_IMAGE_NAME} ${FINAL_IMAGE_NAME}"
-                }
-            }
-        }
-        stage('Push Final Image to Docker Hub') {
-            steps {
-                script {
-                    // Push the tagged image to Docker Hub
-                    sh "docker push ${FINAL_IMAGE_NAME}"
-                }
-            }
-        }
+  }
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
+    CUSTOM_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
+    FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-alpine'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        sh 'echo passed'
+        git branch: 'main', url: 'https://github.com/ajaytalloju/Jenkins.git'
+      }
     }
+    stage('Build Custom Docker Image') {
+      steps {
+        script {
+          // Create the Dockerfile and build the image
+          writeFile file: 'Dockerfile', text: '''
+          FROM adoptopenjdk/openjdk11:alpine-jre
+
+          # Simplify the artifact path
+          ARG artifact=target/spring-boot-web.jar
+
+          WORKDIR /opt/app
+
+          COPY ${artifact} app.jar
+
+          # This should not be changed
+          ENTRYPOINT ["java","-jar","app.jar"]
+          '''
+          // Build the custom Docker image
+          sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
+        }
+      }
+    }
+    stage('Push Custom Docker Image') {
+      steps {
+        script {
+          def customDockerImage = docker.image("${CUSTOM_IMAGE_NAME}")
+          docker.withRegistry('https://index.docker.io/v1/', "dockerhub-cred") {
+            customDockerImage.push()
+          }
+        }
+      }
+    }
+    stage('Update Deployment File') {
+      environment {
+        GIT_REPO_NAME = "Jenkins"
+        GIT_USER_NAME = "ajaytalloju"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            git config user.email "ajay.talloju@gmail.com"
+            git config user.name "Ajay Talloju"
+            BUILD_NUMBER=${BUILD_NUMBER}
+            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+            git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+          '''
+        }
+      }
+    }
+  }
 }
