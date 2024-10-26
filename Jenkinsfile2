@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
+        IMAGE_NAME = 'ajaytalloju/maven-docker-agent'
     }
     stages {
         stage('Build and Push Docker Image') {
