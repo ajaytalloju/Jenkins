@@ -34,28 +34,19 @@ pipeline {
             }
         }
         stage('Build and Push Docker Image') {
+            agent none // Use the Jenkins host agent
             steps {
                 script {
-                    // Define Dockerfile content and build Docker image
                     writeFile file: 'Dockerfile', text: '''
-                    # Use OpenJDK 11 JRE on a slim Debian-based image as the base image
                     FROM openjdk:11-jre-slim
-
-                    # Define the artifact path as a build argument
                     ARG artifact=target/spring-boot-web.jar
-
-                    # Set the working directory inside the container
                     WORKDIR /opt/app
-
-                    # Copy the artifact into the container
                     COPY ${artifact} app.jar
-
-                    # Set the entry point for the container to run the Spring Boot application
                     ENTRYPOINT ["java", "-jar", "app.jar"]
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
-                    
-                    // Login and push the Docker image to Docker Hub
+
+                    // Login and push to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
                 }
