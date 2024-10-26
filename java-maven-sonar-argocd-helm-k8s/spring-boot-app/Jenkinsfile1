@@ -63,11 +63,12 @@ pipeline {
                         if (!isGitRepo) {
                             // Initialize a new Git repository if not already a git repo
                             sh 'git init'
+                            sh 'git branch -m main'  // Set default branch name to 'main'
                             sh 'git config user.email "ajay.talloju@gmail.com"'
                             sh 'git config user.name "ajaytalloju"'
                         }
-                        
-                        // Update deployment file
+
+                        // Proceed with updating the deployment file
                         sh '''
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
                             git add deployment.yml
