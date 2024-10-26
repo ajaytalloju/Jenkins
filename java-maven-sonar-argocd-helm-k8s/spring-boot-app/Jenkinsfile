@@ -58,16 +58,15 @@ pipeline {
             }
             steps {
                 //dir('/home/ajay/Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app') {  // Navigate to the repo directory
-                    withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
-                        sh '''
-                        git config user.email "ajay.talloju@gmail.com"
-                        git config user.name "Ajay Talloju"
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                        git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                        '''
-                    }
+                withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                    git config user.email "ajay.talloju@gmail.com"
+                    git config user.name "Ajay Talloju"
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
                 }
             }
         }
