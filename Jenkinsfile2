@@ -20,7 +20,7 @@ pipeline {
 
                     # Verify installations (optional but useful for debugging)
                     RUN mvn -version && docker --version
-
+                    '''
                     sh "docker build -t ${IMAGE_NAME} ."
                     
                     // Login and push the Docker image to Docker Hub
