@@ -37,11 +37,11 @@ pipeline {
             steps {
                 script {
                     writeFile file: 'Dockerfile', text: '''
-                    FROM openjdk:11-jre-slim
-                    ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
-                    WORKDIR /opt/app
-                    COPY ${artifact} app.jar
-                    ENTRYPOINT ["java", "-jar", "app.jar"]
+                        FROM openjdk:11-jre-slim
+                        ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
+                        WORKDIR /opt/app
+                        COPY ${artifact} app.jar
+                        ENTRYPOINT ["java", "-jar", "app.jar"]
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
 
@@ -58,24 +58,22 @@ pipeline {
             }
             steps {
                 script {
-                    dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
-                        // Check if the directory is a Git repository
-                        def isGitRepo = sh(script: 'git rev-parse --is-inside-work-tree', returnStatus: true) == 0
-                        if (!isGitRepo) {
-                            // Initialize a new Git repository if not already a git repo
-                            sh 'git init'
-                            sh 'git remote add origin https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git'
-                            sh 'git branch -m main'  // Set default branch name to 'main'
-                            sh 'git config user.email "ajay.talloju@gmail.com"'
-                            sh 'git config user.name "ajaytalloju"'
-                        }
-
-                        // Update the deployment file and push changes
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh '''
-                            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
-                            git add deployment.yml
+                            # Configure Git user information
+                            git config --global user.email "ajay.talloju@gmail.com"
+                            git config --global user.name "Ajay Talloju"
+
+                            # Replace placeholder with the build number in the deployment file
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+
+                            # Stage and commit the updated deployment file
+                            git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                            git push -u origin main
+
+                            # Push the changes to the GitHub repository
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                         '''
                     }
                 }
