@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'ajaytalloju/maven-docker-agent' // Your custom image
+            image 'maven:3.8.6-openjdk-11-slim' // Your custom image
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
