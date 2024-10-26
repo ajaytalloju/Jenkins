@@ -17,19 +17,18 @@ pipeline {
             steps {
                 sh 'echo passed'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
-                // git branch: 'main', url: 'https://github.com/iam-veeramalla/Jenkins-Zero-To-Hero.git'
             }
         }
         stage('Build and Test') {
             steps {
                 sh 'ls -ltr'
-                sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
+                sh 'cd Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean package'
             }
         }
         stage('Static Code Analysis') {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-                    sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+                    sh 'cd Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
                 }
             }
         }
@@ -59,11 +58,11 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                     sh '''
+                        cd Jenkins/java-maven-sonar-argocd-helm-k8s/spring-boot-app
                         git config user.email "ajay.talloju@gmail.com"
                         git config user.name "ajaytalloju"
-                        BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                        git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+                        git add deployment.yml
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                     '''
