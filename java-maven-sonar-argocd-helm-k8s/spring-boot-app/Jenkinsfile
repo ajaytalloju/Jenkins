@@ -11,7 +11,7 @@ pipeline {
                     // Define Dockerfile content and build Docker image
                     writeFile file: 'Dockerfile', text: '''
                     # Use AdoptOpenJDK 11 JRE on Alpine as the base image
-                    FROM adoptopenjdk/openjdk11:alpine-jre
+                    FROM openjdk:11-jre-slim
 
                     # Define the artifact path as a build argument
                     ARG artifact=target/spring-boot-web.jar
