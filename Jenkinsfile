@@ -2,8 +2,8 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred')
-        CUSTOM_IMAGE_NAME = 'ajaytalloju/maven-abhishek-docker-agent’
-        FINAL_IMAGE_NAME = 'ajaytalloju/maven-abhishek-docker-agent'
+        CUSTOM_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-docker'
+        FINAL_IMAGE_NAME = 'ajaytalloju/myrepo:node-16-alpine'
     }
     stages {
         stage('Build Custom Docker Image') {
@@ -11,16 +11,11 @@ pipeline {
                 script {
                     // Create the Dockerfile and build the image
                     writeFile file: 'Dockerfile', text: '''
-                    FROM adoptopenjdk/openjdk11:alpine-jre
-
-                    # Simply the artifact path
-                    ARG artifact=target/spring-boot-web.jar
-
-                    WORKDIR /opt/app
-                    COPY ${artifact} app.jar
-
-                     # This should not be changed
-                     ENTRYPOINT ["java","-jar","app.jar"]
+                    FROM node:16-alpine
+                    RUN apk update && apk add --no-cache docker-cli
+                    '''
+                    // Build the Docker image
+                    sh "docker build -t ${CUSTOM_IMAGE_NAME} ."
                 }
             }
         }
@@ -36,6 +31,10 @@ pipeline {
         stage('Test with Custom Image') {
             agent {
                 docker { image "${CUSTOM_IMAGE_NAME}" }
+            }
+            steps {
+                // Run tests within the custom Docker image
+                sh 'node --version'
             }
         }
         stage('Tag Final Image') {
