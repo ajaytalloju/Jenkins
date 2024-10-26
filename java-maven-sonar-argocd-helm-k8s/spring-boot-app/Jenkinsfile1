@@ -11,6 +11,7 @@ pipeline {
         IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
         DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
+        GIT_REPO_PATH = '/var/lib/jenkins/workspace/app1jf1/java-maven-sonar-argocd-helm-k8s/spring-boot-app'
     }
     stages {
         stage('Checkout') {
@@ -58,6 +59,9 @@ pipeline {
             steps {
                 script {
                     dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
+                        // Add the repository as a safe directory
+                        sh "git config --global --add safe.directory ${GIT_REPO_PATH}"
+
                         // Check if the directory is a git repository
                         def isGitRepo = sh(script: 'git rev-parse --is-inside-work-tree', returnStatus: true) == 0
                         if (!isGitRepo) {
