@@ -11,12 +11,12 @@ pipeline {
         IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
         DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
+        GIT_REPO_PATH = '/var/lib/jenkins/workspace/app1jf1/java-maven-sonar-argocd-helm-k8s/spring-boot-app'
     }
     stages {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
-                sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/new j1"'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
             }
         }
@@ -46,7 +46,7 @@ pipeline {
                     sh "docker build -t ${IMAGE_NAME} ."
 
                     // Login and push the Docker image to Docker Hub
-                    sh "echo ${DOCKERHUB_CREDENTIALS.password} | docker login -u ${DOCKERHUB_CREDENTIALS.username} --password-stdin"
+                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
                 }
             }
@@ -60,22 +60,21 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
+                            # Mark the Jenkins workspace as a safe directory
+                            git config --global --add safe.directory /var/lib/jenkins/workspace/app1jf1
+
+                            # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
                             git config --global user.name "ajaytalloju"
 
-                            git checkout main
-                            git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
-
-                            # Pull the latest changes
-                            git pull origin main
-
                             # Replace placeholder with the build number in the deployment file
+                            BUILD_NUMBER=${BUILD_NUMBER}
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
 
                             # Stage and commit the updated deployment file
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                            git add Dockerfile
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+
                             # Push the changes to the GitHub repository
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                         '''
