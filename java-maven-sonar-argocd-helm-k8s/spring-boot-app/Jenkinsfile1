@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
-                sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/new j1"'
+                git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
                 sh 'git checkout main'
             }
@@ -77,7 +77,6 @@ pipeline {
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
                             git add Dockerfile
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-
                             # Push the changes to the GitHub repository
                             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                         '''
