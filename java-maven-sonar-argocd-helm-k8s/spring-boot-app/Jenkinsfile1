@@ -15,10 +15,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                sh 'echo passed'
-                git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
-                checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
-                sh 'git checkout main'
+                script {
+                    sh 'echo passed'
+                    git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
+                    checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
+                }
             }
         }
         stage('Build and Test') {
@@ -47,7 +48,7 @@ pipeline {
                     sh "docker build -t ${IMAGE_NAME} ."
 
                     // Login and push the Docker image to Docker Hub
-                    sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                    sh "echo ${DOCKERHUB_CREDENTIALS.password} | docker login -u ${DOCKERHUB_CREDENTIALS.username} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
                 }
             }
@@ -70,7 +71,6 @@ pipeline {
                             git pull origin main
 
                             # Replace placeholder with the build number in the deployment file
-                            BUILD_NUMBER=${BUILD_NUMBER}
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
 
                             # Stage and commit the updated deployment file
