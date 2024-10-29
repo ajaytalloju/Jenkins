@@ -17,7 +17,9 @@ pipeline {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
+                sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/new j1"'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
+                sh 'git checkout main'
             }
         }
         stage('Build and Test') {
@@ -61,6 +63,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             # Mark the Jenkins workspace as a safe directory
+                            git checkout main
                             git config --global --add safe.directory /var/lib/jenkins/workspace/app1jf1
 
                             # Configure Git user information
