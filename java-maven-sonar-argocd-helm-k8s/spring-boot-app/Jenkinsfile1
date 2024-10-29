@@ -59,6 +59,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
+                            git checkout main
                             git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
                             # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
