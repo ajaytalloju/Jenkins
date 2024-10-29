@@ -15,11 +15,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    sh 'echo passed'
-                    git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
-                    checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
-                }
+                sh 'echo passed'
+                sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/new j1"'
+                checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
             }
         }
         stage('Build and Test') {
@@ -62,10 +60,11 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
-                            git checkout main
-                            git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
                             git config --global user.email "ajay.talloju@gmail.com"
                             git config --global user.name "ajaytalloju"
+
+                            git checkout main
+                            git config --global --add safe.directory '/var/lib/jenkins/workspace/new j1'
 
                             # Pull the latest changes
                             git pull origin main
