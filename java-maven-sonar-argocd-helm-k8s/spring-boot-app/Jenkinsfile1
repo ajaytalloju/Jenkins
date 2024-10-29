@@ -38,6 +38,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
+                    sh 'mkdir -p java-maven-sonar-argocd-helm-k8s/spring-boot-app'                    
                     sh 'pwd'
                     writeFile file: 'Dockerfile', text: '''
                         FROM openjdk:11-jre-slim
