@@ -18,7 +18,7 @@ pipeline {
                 sh 'echo passed'
                 sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/new j1"'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
-                sh 'git checkout main'
+                sh 'git checkout main'                
             }
         }
         stage('Build and Test') {
@@ -37,22 +37,14 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Define the path to the JAR file
-                    def jarFilePath = 'java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar'
-
-                    // Write the Dockerfile
-                    writeFile file: 'java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile', text: """
+                    writeFile file: 'Dockerfile', text: '''
                         FROM openjdk:11-jre-slim
+                        ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
                         WORKDIR /opt/app
-                        COPY ${jarFilePath} app.jar
+                        COPY ${artifact} app.jar
                         ENTRYPOINT ["java", "-jar", "app.jar"]
-                    """
-
-                    // List the target directory to check if the JAR file exists
-                    sh "ls -ltr java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/"
-
-                    // Build the Docker image
-                    sh "docker build -t ${IMAGE_NAME} java-maven-sonar-argocd-helm-k8s/spring-boot-app/"
+                    '''
+                    sh "docker build -t ${IMAGE_NAME} ."
 
                     // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
@@ -81,7 +73,7 @@ pipeline {
 
                             # Stage and commit the updated deployment file
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                            git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile
+                            git add Dockerfile
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
 
                             # Push the changes to the GitHub repository
