@@ -44,7 +44,7 @@ pipeline {
                         COPY ${artifact} app.jar
                         ENTRYPOINT ["java", "-jar", "app.jar"]
                     '''
-                    sh "docker build -t ${IMAGE_NAME} java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
+                    sh "docker build -t ${IMAGE_NAME} java-maven-sonar-argocd-helm-k8s/spring-boot-app/"
 
                     // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
