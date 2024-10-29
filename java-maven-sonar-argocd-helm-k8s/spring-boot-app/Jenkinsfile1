@@ -17,6 +17,7 @@ pipeline {
             steps {
                 sh 'echo passed'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
+                sh 'git checkout main'                
             }
         }
         stage('Build and Test') {
