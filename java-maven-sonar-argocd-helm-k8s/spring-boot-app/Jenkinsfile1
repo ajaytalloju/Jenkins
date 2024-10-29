@@ -37,7 +37,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    writeFile file: 'Dockerfile', text: '''
+                    writeFile file: 'java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile', text: '''
                         FROM openjdk:11-jre-slim
                         ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
                         WORKDIR /opt/app
@@ -73,6 +73,7 @@ pipeline {
 
                             # Stage and commit the updated deployment file
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                            git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
 
                             # Push the changes to the GitHub repository
