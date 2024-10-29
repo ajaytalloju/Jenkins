@@ -11,7 +11,6 @@ pipeline {
         IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
         DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
-        GIT_REPO_PATH = '/var/lib/jenkins/workspace/app1jf1/java-maven-sonar-argocd-helm-k8s/spring-boot-app'
     }
     stages {
         stage('Checkout') {
@@ -60,9 +59,6 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
                         sh '''
-                            # Mark the Jenkins workspace as a safe directory
-                            git config --global --add safe.directory /var/lib/jenkins/workspace/app1jf1
-
                             # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
                             git config --global user.name "ajaytalloju"
