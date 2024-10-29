@@ -76,6 +76,7 @@ pipeline {
 
                             # Stage and commit the updated deployment file
                             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                            git add Dockerfile
                             git commit -m "Update deployment image to version ${BUILD_NUMBER}"
 
                             # Push the changes to the GitHub repository
