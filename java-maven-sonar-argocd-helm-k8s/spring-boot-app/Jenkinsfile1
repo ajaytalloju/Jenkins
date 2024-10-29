@@ -38,6 +38,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
+                    sh 'pwd'
                     writeFile file: 'Dockerfile', text: '''
                         FROM openjdk:11-jre-slim
                         ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
