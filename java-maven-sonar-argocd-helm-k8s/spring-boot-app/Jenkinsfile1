@@ -71,10 +71,11 @@ pipeline {
                             # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
                             git config --global user.name "ajaytalloju"
-
+                            
+                            git fetch origin main
+                            git reset --hard origin/main
                             # Replace placeholder with the build number in the deployment file
-                            BUILD_NUMBER=${BUILD_NUMBER}
-                            git pull --ff-only origin main                           
+                            BUILD_NUMBER=${BUILD_NUMBER}                          
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
 
                             # Stage and commit the updated deployment file
