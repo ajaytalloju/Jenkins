@@ -71,6 +71,9 @@ pipeline {
                             # Configure Git user information
                             git config --global user.email "ajay.talloju@gmail.com"
                             git config --global user.name "ajaytalloju"
+                            # Add .gitignore to exclude target directory if not present
+                            echo "java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/" >> .gitignore
+                            git add .gitignore
                             
                             git fetch origin main
                             git reset --hard origin/main
