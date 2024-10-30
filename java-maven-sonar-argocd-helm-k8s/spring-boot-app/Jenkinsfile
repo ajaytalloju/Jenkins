@@ -11,12 +11,15 @@ pipeline {
         IMAGE_NAME = 'ajaytalloju/myrepo:maven-openjdk'
         DOCKER_IMAGE = "ajaytalloju/ultimate-cicd:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('dockerhub-cred')
+        GIT_REPO_PATH = '/var/lib/jenkins/workspace/app1jf1/java-maven-sonar-argocd-helm-k8s/spring-boot-app'
     }
     stages {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
+                sh 'git config --global --add safe.directory "/var/lib/jenkins/workspace/appjf"'
                 checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: 'https://github.com/ajaytalloju/Jenkins.git']]])
+                sh 'git checkout main'
             }
         }
         stage('Build and Test') {
@@ -35,16 +38,16 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
+                    sh 'mkdir -p java-maven-sonar-argocd-helm-k8s/spring-boot-app'                    
+                    sh 'pwd'
                     writeFile file: 'Dockerfile', text: '''
-                    FROM openjdk:11-jre-slim
-                    ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
-                    WORKDIR /opt/app
-                    COPY ${artifact} app.jar
-                    ENTRYPOINT ["java", "-jar", "app.jar"]
+                        FROM openjdk:11-jre-slim
+                        ARG artifact=java-maven-sonar-argocd-helm-k8s/spring-boot-app/target/spring-boot-web.jar
+                        WORKDIR /opt/app
+                        COPY ${artifact} app.jar
+                        ENTRYPOINT ["java", "-jar", "app.jar"]
                     '''
                     sh "docker build -t ${IMAGE_NAME} ."
-
-                    // Login and push the Docker image to Docker Hub
                     sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                     sh "docker push ${IMAGE_NAME}"
                 }
@@ -56,16 +59,22 @@ pipeline {
                 GIT_USER_NAME = "ajaytalloju"
             }
             steps {
-                withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
-                    sh '''
-                        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
-                        git config user.email "ajay.talloju@gmail.com"
-                        git config user.name "ajaytalloju"
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
-                        git add deployment.yml
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                    '''
+                script {
+                    withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git checkout main
+                            git config --global --add safe.directory /var/lib/jenkins/workspace/app1jf1
+                            git config --global user.email "ajay.talloju@gmail.com"
+                            git config --global user.name "ajaytalloju"
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            git pull origin main                           
+                            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                            git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
+                            git add Dockerfile
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
                 }
             }
         }
