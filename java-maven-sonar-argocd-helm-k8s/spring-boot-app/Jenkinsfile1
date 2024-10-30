@@ -74,7 +74,7 @@ pipeline {
 
                             # Replace placeholder with the build number in the deployment file
                             BUILD_NUMBER=${BUILD_NUMBER}
-                            git pull origin main                           
+                            git pull --ff-only origin main                           
                             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
 
                             # Stage and commit the updated deployment file
