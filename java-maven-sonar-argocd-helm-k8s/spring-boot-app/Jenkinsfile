@@ -9,6 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 sh 'echo passed'
+                // Uncomment to checkout the repository
                 // git branch: 'main', url: 'https://github.com/iam-veeramalla/Jenkins-Zero-To-Hero.git'
             }
         }
@@ -49,18 +50,21 @@ pipeline {
             environment {
                 GIT_REPO_NAME = "Jenkins"
                 GIT_USER_NAME = "ajaytalloju"
+                GIT_REPO_PATH = "java-maven-sonar-argocd-helm-k8s/spring-boot-app" // Set the path to the repository
             }
             steps {
                 withCredentials([string(credentialsId: 'github-cred', variable: 'GITHUB_TOKEN')]) {
-                    sh '''
-                        git config user.email "ajay.talloju@gmail.com"
-                        git config user.name "ajaytalloju"
-                        BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                        git add java-maven-sonar-argocd-helm-k8s/spring-boot-app/deployment.yml
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                    '''
+                    dir(GIT_REPO_PATH) { // Change to the directory of the Git repository
+                        sh '''
+                            git config user.email "ajay.talloju@gmail.com"
+                            git config user.name "ajaytalloju"
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+                            git add deployment.yml
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
                 }
             }
         }
